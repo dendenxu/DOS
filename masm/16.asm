@@ -67,6 +67,7 @@ main proc
 
     call search_in_file
     jc not_found
+    ; found a match
 
     ; quit the program
 quit:
@@ -90,6 +91,8 @@ not_found:
     jmp quit
 main endp
 
+
+
 ; @param [raw] raw value to be searched on
 ; @param [fp] file pointer of the file to be operated on
 ; the cursor is guaranteed to be at the start of the file
@@ -102,12 +105,7 @@ search_in_file proc
     ; or the location can be 32-bit
     ; but we made sure the buffer is no more than 16-bit
 next_buf:
-    mov ax, [location]
-    add ax, [processed_len]
-    mov [location], ax
-    mov ax, [location+2]
-    adc ax, 0
-    mov [location+2], ax
+    call set_up_location
     mov cx, [file_len+2]
     cmp cx, 0
     jnz buf_all
@@ -129,7 +127,9 @@ read_in:
     add ax, [read_len]
     mov [buf_len], ax
     cmp ax, [raw_len]
-    jb never_occur
+    jb never_found_here
+    mov cx, [buf_len]
+    sub cx, [raw_len]
     call check_buffer
     jnc return
     call update_processed_remained
@@ -172,6 +172,14 @@ update_file_len:
     sbb ax, 0
     mov [file_len+2], ax
     ret
+set_up_location:
+    mov ax, [location]
+    add ax, [processed_len]
+    mov [location], ax
+    mov ax, [location+2]
+    adc ax, 0
+    mov [location+2], ax
+    ret
 search_in_file endp
 
 ; @param cx set to the length of the string
@@ -181,7 +189,7 @@ check_buffer proc
     mov al, [raw]
 check_next:
     inc si
-    cmp al, buf[si]
+    cmp al, buf[si-1]
     jz might_equal
     dec cx
     jcxz never_occur
@@ -199,6 +207,8 @@ might_equal:
     dec cx
     jmp check_next
 found:
+    pop cx
+    sub si, [raw_len]
     add si, [location]
     mov [location+2], si
     mov ax, [location+2]
