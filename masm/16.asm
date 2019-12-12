@@ -1,6 +1,7 @@
 data segment
 fp dw 0 ; file pointer
 file_len dw 2 dup(0) ; file length
+location dw 2 dup(0) ; location of the found pattern
 
 ; this area is used along with int 21h ah = 0ah
 hex_len db hex_size
@@ -12,11 +13,16 @@ filename_re db 0
 filename db 0ffh dup(0) ; filename temp storage
 filename_size equ $-filename
 
-buf db 400h dup(0) ; buffer for reading the file
+buf db 4000h dup(0) ; buffer for reading the file
+buf_size equ $-buf ; buffer size
 raw db 0ffh dup(0) ; raw hexadecimal value read from input
+raw_len db 0
+
 ; 24h is '$'
 unable_to_open_file_msg db "ERROR: unable to open the file specified, check that the file exists", 0dh, 0ah, "The program will now exit...", 24h
 illegal_input_msg db "ERROR: unable to process your hexadecimal input, check that the number of chars you input is even and ABCDEF are upper-case", 0dh, 0ah, "The program will now exit...", 24h
+not_found_msg db "not found", 24h
+
 data ends
 
 code segment
@@ -58,6 +64,8 @@ main proc
     call convert_hex
     jc illegal_input
 
+    call search_in_file
+    jc not_found
 
     ; quit the program
 quit:
@@ -74,7 +82,79 @@ illegal_input:
     mov ah, 09h
     int 21h
     jmp quit
+not_found:
+    mov dx, offset not_found_msg
+    mov ah, 09h
+    int 21h
+    jmp quit
 main endp
+
+; @param [raw] raw value to be searched on
+; @param [fp] file pointer of the file to be operated on
+; the cursor is guaranteed to be at the start of the file
+; @return [location] the location of the first found char
+; note that if there's multiple matches, only the first one will be considered
+; if found, carry flag is cleared
+; if not found, carry flag is set
+search_in_file proc
+    ; bear in mind that the length of the file
+    ; or the location can be 32-bit
+    ; but we made sure the buffer is no more than 16-bit
+    mov dx, [file_len+2]
+    cmp dx, 0
+    jnz big_file
+    mov cx, [file_len]
+    cmp cx, buf_size
+    jb one_buffer
+big_file:
+    ; mov ah, 3Fh
+    ; mov bx, [fp]
+    ; mov cx, read_len
+    ; mov dx, offset buf
+    ; add dx, remained_len
+    ; int 21h
+one_buffer:
+    mov ah, 3Fh
+    mov bx, [fp]
+    mov dx, offset buf
+    int 21h
+    call check_buffer
+    ret
+    
+search_in_file endp
+
+; @param cx set to the length of the string
+check_buffer proc
+    xor si, si
+    lea di, [raw+1]
+    mov al, [raw]
+check_next:
+    inc si
+    cmp al, buf[si]
+    jz might_equal
+    dec cx
+    jcxz never_occur
+    jmp check_next
+never_occur:
+    stc
+    ret
+might_equal:
+    push cx
+    xor cx, cx
+    mov cl, [raw_len]
+    dec cx
+    repe cmpsb
+    jcxz found
+    pop cx
+    dec cx
+    jmp check_next
+found:
+    add si, [location+2]
+    mov [location+2], si
+    mov ax, [location]
+    adc ax, 0
+    mov [location], ax
+check_buffer endp
 
 ; @param [hex] the buffer hex to be converted on
 ; @return [raw] raw value of the converted hexadecimal chars
@@ -95,6 +175,9 @@ trim_next:
 trim_done:
     ; size of bytes after trimming white space is di
     mov cx, di
+    mov ax, di
+    shr ax, 1
+    mov [raw_len], al
     test cl, 00000001b
     jnz error
     xor si, si
@@ -112,7 +195,8 @@ next_4_bit:
 is_digit:
     sub al, '0'
     jb error
-    shl dl, 4
+    shl dl, 4 ; This instruction is expanded to four shl dl, 1 in TASM
+              ; and is not accepted in MASM
     add dl, al
     inc bx
     cmp bx, 2

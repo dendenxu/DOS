@@ -19,9 +19,10 @@ long find(FILE *fp, long n, char s[])
     processed_len = 0;      /* 上次已搜索过的字节数 */
     remained_len = 0;       /* 上次搜索时余下没搜的字节数 */
     while (n != 0) {
-        offset += processed_len;                    /* processed_len是上次已搜索过的字节数,
-                                  offset为buf[0]中的那个字节距离文件开端的偏移量
-                                */
+        offset += processed_len;
+        /* processed_len是上次已搜索过的字节数,
+          offset为buf[0]中的那个字节距离文件开端的偏移量
+        */
         read_len = n < read_len ? n : read_len;     /* read_len是本次要读的字节数 */
         fread(buf + remained_len, 1, read_len, fp); /* 读取read_len字节到buf+remained_len中 */
         /* 汇编语言读文件步骤:
