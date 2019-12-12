@@ -2,7 +2,12 @@ data segment
 fp dw 0 ; file pointer
 file_len dw 2 dup(0) ; file length
 location dw 2 dup(0) ; location of the found pattern
-
+read_len dw buf_size
+remained_len dw 0
+processed_len dw 0
+raw_len dw 0
+buf_len dw 0
+raw db 0ffh dup(0) ; raw hexadecimal value read from input
 ; this area is used along with int 21h ah = 0ah
 hex_len db hex_size
 hex_re db 0
@@ -12,17 +17,12 @@ filename_len db filename_size
 filename_re db 0
 filename db 0ffh dup(0) ; filename temp storage
 filename_size equ $-filename
-
-buf db 4000h dup(0) ; buffer for reading the file
+buf db 400h dup(0) ; buffer for reading the file
 buf_size equ $-buf ; buffer size
-raw db 0ffh dup(0) ; raw hexadecimal value read from input
-raw_len db 0
-
 ; 24h is '$'
 unable_to_open_file_msg db "ERROR: unable to open the file specified, check that the file exists", 0dh, 0ah, "The program will now exit...", 24h
 illegal_input_msg db "ERROR: unable to process your hexadecimal input, check that the number of chars you input is even and ABCDEF are upper-case", 0dh, 0ah, "The program will now exit...", 24h
 not_found_msg db "not found", 24h
-
 data ends
 
 code segment
@@ -31,6 +31,7 @@ main proc
     ; initializing ds
     mov ax, data
     mov ds, ax
+    mov es, ax
     ; read in the filename
     mov ah, 0ah
     mov dx, offset filename_len
@@ -100,27 +101,77 @@ search_in_file proc
     ; bear in mind that the length of the file
     ; or the location can be 32-bit
     ; but we made sure the buffer is no more than 16-bit
-    mov dx, [file_len+2]
-    cmp dx, 0
-    jnz big_file
+next_buf:
+    mov ax, [location]
+    add ax, [processed_len]
+    mov [location], ax
+    mov ax, [location+2]
+    adc ax, 0
+    mov [location+2], ax
+    mov cx, [file_len+2]
+    cmp cx, 0
+    jnz buf_all
     mov cx, [file_len]
     cmp cx, buf_size
-    jb one_buffer
-big_file:
-    ; mov ah, 3Fh
-    ; mov bx, [fp]
-    ; mov cx, read_len
-    ; mov dx, offset buf
-    ; add dx, remained_len
-    ; int 21h
-one_buffer:
+    ja buf_all
+    jmp read_in
+buf_all:
+    mov cx, [read_len]
+read_in:
+    mov [read_len], cx
     mov ah, 3Fh
     mov bx, [fp]
     mov dx, offset buf
+    add dx, [remained_len]
     int 21h
+    call update_file_len
+    mov ax, [remained_len]
+    add ax, [read_len]
+    mov [buf_len], ax
+    cmp ax, [raw_len]
+    jb never_occur
     call check_buffer
+    jnc return
+    call update_processed_remained
+    call memcpy
+    neg ax
+    add ax, [buf_len]
+    mov [read_len], ax
+    mov cx, [file_len+2]
+    cmp cx, 0
+    jnz next_buf
+    mov cx, [file_len]
+    cmp cx, 0
+    jnz next_buf ; relative jump may be out of range, be careful
+never_found_here:
+    stc
+return:
     ret
-    
+update_processed_remained:
+    mov ax, 0
+    adc ax, [buf_len]
+    sub ax, [raw_len]
+    mov [processed_len], ax
+    mov ax, [raw_len]
+    dec ax
+    mov [remained_len], ax
+    ret
+memcpy:
+    cld
+    mov di, offset buf
+    mov si, offset buf
+    add si, [processed_len]
+    mov cx, [remained_len]
+    rep movsb
+    ret
+update_file_len:
+    mov ax, [file_len]
+    sub ax, [read_len]
+    mov [file_len], ax
+    mov ax, [file_len+2]
+    sbb ax, 0
+    mov [file_len+2], ax
+    ret
 search_in_file endp
 
 ; @param cx set to the length of the string
@@ -140,8 +191,7 @@ never_occur:
     ret
 might_equal:
     push cx
-    xor cx, cx
-    mov cl, [raw_len]
+    mov cx, [raw_len]
     dec cx
     repe cmpsb
     jcxz found
@@ -149,11 +199,13 @@ might_equal:
     dec cx
     jmp check_next
 found:
-    add si, [location+2]
+    add si, [location]
     mov [location+2], si
-    mov ax, [location]
+    mov ax, [location+2]
     adc ax, 0
-    mov [location], ax
+    mov [location+2], ax
+    clc
+    ret
 check_buffer endp
 
 ; @param [hex] the buffer hex to be converted on
@@ -177,7 +229,7 @@ trim_done:
     mov cx, di
     mov ax, di
     shr ax, 1
-    mov [raw_len], al
+    mov [raw_len], ax
     test cl, 00000001b
     jnz error
     xor si, si
