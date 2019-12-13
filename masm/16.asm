@@ -211,11 +211,13 @@ read_in:
     call check_buffer
     jnc return
     call update_processed_remained
-    ; use movsb to immitate memcpy
+    ; use movsb to imitate memcpy
     call memcpy
+    ; ax is set to remained_len in the call of update_processed_remained
     neg ax
     add ax, buf_size
     mov [read_len], ax
+    ; check that the the file is still left to read
     mov cx, [file_len+2]
     cmp cx, 0
     jnz next_buf
@@ -273,12 +275,16 @@ check_buffer proc
     mov al, [raw]
 check_next:
     lea di, [raw+1]
-    inc si
-    cmp al, buf[si-1]
-    jz might_equal
-    dec cx
+    push di
+    mov di, si
+    add di, offset buf
+    cld
+    repne scasb
+    sub di, offset buf
+    mov si, di
+    pop di
     jcxz never_occur
-    jmp check_next
+    jmp might_equal
 never_occur:
     stc
     ret
