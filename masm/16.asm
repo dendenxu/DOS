@@ -23,6 +23,8 @@ buf_size equ $-buf ; buffer size
 unable_to_open_file_msg db "ERROR: unable to open the file specified, check that the file exists", 0dh, 0ah, "The program will now exit...", 24h
 illegal_input_msg db "ERROR: unable to process your hexadecimal input, check that the number of chars you input is even and ABCDEF are upper-case", 0dh, 0ah, "The program will now exit...", 24h
 not_found_msg db "not found", 24h
+found_msg db "found at ", 24h
+output_16_char db 4 dup(0), '$'
 data ends
 
 code segment
@@ -68,7 +70,14 @@ main proc
     call search_in_file
     jc not_found
     ; found a match
-
+    mov dx, offset found_msg
+    mov ah, 09h
+    int 21h
+    mov ax, [location+2]
+    call output_16
+    mov ax, [location]
+    call output_16
+    call crlf
     ; quit the program
 quit:
     mov al, 0
@@ -90,8 +99,43 @@ not_found:
     int 21h
     jmp quit
 main endp
-
-
+crlf:
+    mov ah, 02h
+    mov dl, 0dh
+    int 21h
+    mov dl, 0ah
+    int 21h
+    ret
+; @param eax the hexadecimal to be printed on the screen
+; modifies the value of result_char to store the 16-bit string
+output_16:
+    mov cx, 4
+    xor di, di
+out16_again:
+    push cx
+    mov cl, 4
+    rol ax, cl
+    push ax
+    and ax, 0fh ; Get only the least four bits of ax
+    cmp ax, 10
+    jb is_digit
+is_alpha:
+    sub al, 10
+    add al, 'A' ; Print hexadecimal in uppercase
+    jmp finish_4bits
+is_digit:
+    add al, '0'
+finish_4bits:
+    mov output_16_char[di], al
+    pop ax
+    pop cx
+    inc di
+    dec cx
+    jnz out16_again
+    mov ah, 09h
+    mov dx, offset output_16_char
+    int 21h
+    ret
 
 ; @param [raw] raw value to be searched on
 ; @param [fp] file pointer of the file to be operated on
@@ -185,9 +229,9 @@ search_in_file endp
 ; @param cx set to the length of the string
 check_buffer proc
     xor si, si
-    lea di, [raw+1]
     mov al, [raw]
 check_next:
+    lea di, [raw+1]
     inc si
     cmp al, buf[si-1]
     jz might_equal
@@ -198,19 +242,21 @@ never_occur:
     stc
     ret
 might_equal:
+    cld
     push cx
+    push si
+    add si, offset buf
     mov cx, [raw_len]
-    dec cx
     repe cmpsb
+    pop si
     jcxz found
     pop cx
-    dec cx
     jmp check_next
 found:
     pop cx
-    sub si, [raw_len]
+    dec si
     add si, [location]
-    mov [location+2], si
+    mov [location], si
     mov ax, [location+2]
     adc ax, 0
     mov [location+2], ax
@@ -250,11 +296,11 @@ next_byte:
 next_4_bit:
     mov al, hex[si+bx]
     cmp al, '9'
-    jbe is_digit
+    jbe is_a_digit
     sub al, 'A' - '0' - 10; the added '0' will be trimmed in the following instruction
     cmp al, '0' + 0fh
     ja error
-is_digit:
+is_a_digit:
     sub al, '0'
     jb error
     shl dl, 4 ; This instruction is expanded to four shl dl, 1 in TASM
@@ -269,6 +315,7 @@ is_digit:
     inc di
     cmp si, cx
     jnz next_byte
+    mov raw[di], 0
     clc
     ret
 error:
