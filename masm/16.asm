@@ -1,14 +1,20 @@
+; Some major functions are wrapped with proc and endp
+; smaller functions are implemented with label only
+; some small functions exist for code readability and for avoiding far jmp with comparison
 data segment
+; this section is used to store some important information during the life cycle of the program
 fp dw 0 ; file pointer
 file_len dw 2 dup(0) ; file length
 location dw 2 dup(0) ; location of the found pattern
-read_len dw buf_size
-remained_len dw 0
+read_len dw buf_size ; the length to be read next time, initially it is the size of the whole buffer
+remained_len dw 0 ; remained length to be omitted on next read, usually it is the length of the hex code minus one
 processed_len dw 0
 raw_len dw 0
 buf_len dw 0
 raw db 0ffh dup(0) ; raw hexadecimal value read from input
-; this area is used along with int 21h ah = 0ah
+
+; this section of memory is used along with int 21h ah = 0ah
+; the previous section is used to store useful debug info and is relatively short, easy to read in tb's dump window
 hex_len db hex_size
 hex_re db 0
 hex db 0ffh dup(0) ; hexadecimal temp storage
@@ -17,8 +23,11 @@ filename_len db filename_size
 filename_re db 0
 filename db 0ffh dup(0) ; filename temp storage
 filename_size equ $-filename
+
 buf db 400h dup(0) ; buffer for reading the file
 buf_size equ $-buf ; buffer size
+
+; this section is used for storing output information, including some error message and the temp storage for the found address in ASCII
 ; 24h is '$'
 unable_to_open_file_msg db "ERROR: unable to open the file specified, check that the file exists", 0dh, 0ah, "The program will now exit...", 24h
 illegal_input_msg db "ERROR: unable to process your hexadecimal input, check that the number of chars you input is even and ABCDEF are upper-case", 0dh, 0ah, "The program will now exit...", 24h
@@ -47,6 +56,7 @@ main proc
     mov ah, 02h
     int 21h
     ; try opening the file
+    ; communication is constructed based on carry flag
     call open_file
     jc unable_to_open_file
     ; try getting the file length
@@ -63,42 +73,57 @@ main proc
     mov dl, 0ah
     mov ah, 02h
     int 21h
-    
+    ; try converting the read hexadecimal string to raw hexadecimal value
+    ; it checks parity of the input, and for simplicity it can only process upper case in hexadecimal
+    ; however, multiple white space between two byte is allowed (ASCII: 20h)
+    ; don't worry, if your input is illegal the program will prompt and automatically exit
     call convert_hex
     jc illegal_input
-
+    ; try to search for the hexadecimal string in the file specified
     call search_in_file
     jc not_found
     ; found a match
+    ; output: found at
     mov dx, offset found_msg
     mov ah, 09h
     int 21h
+    ; sequentially output the hexadecimal of the location of the first found match
+    ; here I used the code written in the previous homework
     mov ax, [location+2]
     call output_16
     mov ax, [location]
     call output_16
+    ; output 0dh 0ah (line break)
     call crlf
+    xor al, al
     ; quit the program
 quit:
-    mov al, 0
+    ; calling int 21h (ah = 4Ch)
     mov ah, 4ch
     int 21h
 unable_to_open_file:
     mov dx, offset unable_to_open_file_msg
     mov ah, 09h
     int 21h
+    mov al, 1
     jmp quit
 illegal_input:
     mov dx, offset illegal_input_msg
     mov ah, 09h
     int 21h
+    mov al, 2
     jmp quit
 not_found:
     mov dx, offset not_found_msg
     mov ah, 09h
     int 21h
+    mov al, 3
     jmp quit
 main endp
+
+; @param no param
+; @return return nothing
+; @function print a line break to console
 crlf:
     mov ah, 02h
     mov dl, 0dh
@@ -106,8 +131,10 @@ crlf:
     mov dl, 0ah
     int 21h
     ret
+
 ; @param eax the hexadecimal to be printed on the screen
-; modifies the value of result_char to store the 16-bit string
+; @function output a 2-byte (word) hexadecimal value to console
+; @note modifies the value of result_char to store the 16-bit string
 output_16:
     mov cx, 4
     xor di, di
@@ -139,34 +166,41 @@ finish_4bits:
 
 ; @param [raw] raw value to be searched on
 ; @param [fp] file pointer of the file to be operated on
-; the cursor is guaranteed to be at the start of the file
+; @prerequisite the cursor should be at the start of the file
 ; @return [location] the location of the first found char
-; note that if there's multiple matches, only the first one will be considered
-; if found, carry flag is cleared
-; if not found, carry flag is set
+; @return if found, carry flag is cleared
+; @return if not found, carry flag is set
+; @note if there's multiple matches, only the first one will be considered
 search_in_file proc
     ; bear in mind that the length of the file
-    ; or the location can be 32-bit
-    ; but we made sure the buffer is no more than 16-bit
+    ; or the location can be 32-bit (meaning the file can be almost 4GB at most)
+    ; but we made sure the buffer is no more than 16-bit (which is 64k)
+    ; and the registers we use are all 2-byte long
+    ; here we use a 400h byte buffer, and it could be set larger
 next_buf:
-    call set_up_location
+    call set_up_location ; this exists to reduce relative jump distance
+    ; determine the bytes to read ([read_len])
     mov cx, [file_len+2]
     cmp cx, 0
     jnz buf_all
     mov cx, [file_len]
-    cmp cx, buf_size
+    cmp cx, [read_len]
     ja buf_all
     jmp read_in
 buf_all:
     mov cx, [read_len]
 read_in:
     mov [read_len], cx
-    mov ah, 3Fh
+    ; read information in buffer using int 21h (ah = 3fh)
+    ; cx is already set above
+    mov ah, 3fh
     mov bx, [fp]
     mov dx, offset buf
     add dx, [remained_len]
     int 21h
+    ; update the length of the file (how many bytes to read?)
     call update_file_len
+    ; check whether remained buffer size is too small and update buffer size
     mov ax, [remained_len]
     add ax, [read_len]
     mov [buf_len], ax
@@ -177,9 +211,10 @@ read_in:
     call check_buffer
     jnc return
     call update_processed_remained
+    ; use movsb to immitate memcpy
     call memcpy
     neg ax
-    add ax, [buf_len]
+    add ax, buf_size
     mov [read_len], ax
     mov cx, [file_len+2]
     cmp cx, 0
@@ -192,7 +227,13 @@ never_found_here:
 return:
     ret
 update_processed_remained:
-    mov ax, 0
+    ; this line shouldn't be xor ax, ax because we have to preserve carry flag
+    ; or you can manually set carry flag
+    xor ax, ax
+    stc
+    ; we need to add 1 here
+    ; and carry flag is guaranteed to be set here
+    ; so by using adc we can use less line
     adc ax, [buf_len]
     sub ax, [raw_len]
     mov [processed_len], ax
@@ -268,8 +309,8 @@ check_buffer endp
 ; @return [raw] raw value of the converted hexadecimal chars
 ; if the input is illegal, carry flag is set, otherwise carry flag is cleared
 convert_hex proc
-    mov si, 0
-    mov di, 0
+    xor si, si
+    xor di, di
 trim_next:
     mov al, hex[si]
     cmp al, 0
@@ -329,7 +370,7 @@ convert_hex endp
 ; and carry flag is set if failed to open
 open_file proc
     mov ah, 3Dh
-    mov al, 0
+    xor al, al
     mov dx, offset filename
     int 21h
     mov [fp], ax
@@ -357,7 +398,7 @@ get_file_len proc
     mov word ptr file_len[2], dx
     ; reset file pointer to the start
     mov ah, 42h
-    mov al, 0
+    xor al, al
     xor dx, dx
     int 21h
     ret
