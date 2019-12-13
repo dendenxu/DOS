@@ -94,7 +94,6 @@ main proc
     mov ax, [location]
     call output_16
     ; output 0dh 0ah (line break)
-    call crlf
     xor al, al
     ; quit the program
 quit:
@@ -208,6 +207,7 @@ read_in:
     jb never_found_here
     mov cx, [buf_len]
     sub cx, [raw_len]
+    add cx, 2
     call check_buffer
     jnc return
     call update_processed_remained
@@ -291,6 +291,8 @@ never_occur:
 might_equal:
     cld
     push cx
+    cmp cx, 1
+    jz found
     push si
     add si, offset buf
     mov cx, [raw_len]

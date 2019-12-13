@@ -110,7 +110,7 @@ main()
      */
     offset = find(fp, n, s); /* ÔÚ³¤¶ÈÎªn×Ö½ÚµÄÎÄ¼şÖĞËÑË÷Ê®Áù½øÖÆ´®s, ÈôÕÒµ½
                                Ôò·µ»Ø¸Ã´®ÔÚÎÄ¼şÄÚµÄÆ«ÒÆÁ¿, ·ñÔò·µ»Ø-1
-                             */
+           ÿ                 */
     fclose(fp);
     if (offset != -1)
         printf("found at %08lX\n", offset);
@@ -118,3 +118,4 @@ main()
         puts("Not found!");
     getchar();
 }
+ÿ
