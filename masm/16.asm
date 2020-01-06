@@ -207,7 +207,10 @@ read_in:
     jb never_found_here
     mov cx, [buf_len]
     sub cx, [raw_len]
-    add cx, 2
+    add cx, 2; this line is quite important, first, notice that the end of buf_len - raw_len should be checked
+             ; and when using repne scasb, when found, cx is subtracted by one (jcxz will never happen since cx is now ffff).
+             ; so error occur when we involve the last byte
+             ; of the file in the string to be searched
     call check_buffer
     jnc return
     call update_processed_remained
@@ -228,6 +231,8 @@ never_found_here:
     stc
 return:
     ret
+
+; @function: the function of these small procedures are quite self-explanatory 
 update_processed_remained:
     ; this line shouldn't be xor ax, ax because we have to preserve carry flag
     ; or you can manually set carry flag
@@ -270,6 +275,10 @@ set_up_location:
 search_in_file endp
 
 ; @param cx set to the length of the string
+; @function this function check the current buffer for possible match
+; @function firstly it scan through the buffer, excluding the end
+; @function if there's a match for the first byte, the following ones will be checked
+; @note length of string might be only one byte, take care of it separately so DOS doesn't crash
 check_buffer proc
     xor si, si
     mov al, [raw]
@@ -288,14 +297,16 @@ check_next:
 never_occur:
     stc
     ret
+; check the byte following the first one
+; note that we should handle the case where the length of the raw-hex string is one byte
 might_equal:
     cld
     push cx
+    mov cx, [raw_len]
     cmp cx, 1
     jz found
     push si
     add si, offset buf
-    mov cx, [raw_len]
     repe cmpsb
     pop si
     jcxz found
@@ -314,8 +325,9 @@ found:
 check_buffer endp
 
 ; @param [hex] the buffer hex to be converted on
+; @function convert the input hexadecimal string, and take care of extra white space
 ; @return [raw] raw value of the converted hexadecimal chars
-; if the input is illegal, carry flag is set, otherwise carry flag is cleared
+; @return if the input is illegal, carry flag is set, otherwise carry flag is cleared
 convert_hex proc
     xor si, si
     xor di, di
@@ -352,8 +364,12 @@ next_4_bit:
 is_a_digit:
     sub al, '0'
     jb error
-    shl dl, 4 ; This instruction is expanded to four shl dl, 1 in TASM
-              ; and is not accepted in MASM
+    shl dl, 1
+    shl dl, 1
+    shl dl, 1
+    shl dl, 1 ; shl dl, 4 is expanded to four shl dl, 1 in TASM
+              ; and might not be accepted in MASM
+              ; so we manually expand it
     add dl, al
     inc bx
     cmp bx, 2
@@ -370,12 +386,12 @@ is_a_digit:
 error:
     stc
     ret
-
 convert_hex endp
 
 ; @param [filename] the name of the file to be opened
 ; @return [fp] file pointer if file is successfully opened, error code if failed to open
-; and carry flag is set if failed to open
+; @return and carry flag is set if failed to open
+; @note the trick to return value in carry flag is inspire by this interrupt
 open_file proc
     mov ah, 3Dh
     xor al, al
@@ -385,10 +401,9 @@ open_file proc
     ret
 open_file endp
 
-
 ; @param [fp] the file pointer
 ; @return [file_len] the length of the file(double word:32-bit)
-; file pointer is moved to the start after calculation
+; @return file pointer is moved to the start after calculation
 get_file_len proc
     mov ah, 42h
     ; AL = origin of move

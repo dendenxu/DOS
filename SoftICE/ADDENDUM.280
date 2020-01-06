@@ -1,0 +1,561 @@
+                 ADDENDUM FOR SOFT-ICE (DOS) VERSION 2.8
+
+This addendum contains all new commands, features and bug fixes in Soft-ICE
+for DOS since version 2.64.
+
+
+			INSTALLATION
+			------------
+
+To install the new version of Soft-ICE for DOS on your system, insert the
+floppy disk into your disk drive and: 
+
+	-Copy all the files from the disk to the destination directory on
+  	 your hard drive.
+
+	-Run EMMSETUP on S-ICE.EXE to configure the memory manager.
+	 Syntax:
+		EMMSETUP S-ICE.EXE
+
+	-Create a new CONFIG.SYS file for Soft-ICE for DOS.  A sample
+	 one is included and is entitled CONFIG.ICE.
+
+
+
+			NEW/MODIFIED COMMANDS
+			---------------------
+
+---------------------------------------------------------------------
+
+			P
+
+P -- Program Step
+
+Syntax:
+	P [ RET ]
+
+Comments:
+
+The P command is a logical program step.  One instruction at the current
+CS:IP is executed unless the instruction is a call, interrupt, loop, or 
+repeated string instruction.  In those cases, the entire routine or 
+iteration is completed before control is returned to Soft-ICE.
+
+The P command uses a one-time execution break point.  The non-sticky
+execution break point uses an 80386 break point register, unless
+all break point registers have been allocated to sticky break points.  In
+that case, and INT 3 style break point is implemented.  When this case occurs, 
+the P and G commands will not work correctly in ROM.  An error message
+will be displayed if this is attempted.
+
+In source mode, the P command steps to the next source statement.  If the 
+current statement is a procedure or function call, the P command steps over
+it.
+
+If RET is specified, the P command will step until the next RET or IRET
+instruction.
+
+----------------------------------------------------------------------
+
+			LINES
+
+
+LINES -- Change number of lines of the Soft-ICE display.
+
+Syntax:
+	LINES [ 25 | 43 | 50 ]
+
+Comments:
+
+The LINES command changes Soft-ICE's character display mode.  It allows
+three different display modes: 25 line, 43 line, or 50 line mode.
+43-line mode is only valid on VGA or EGA display adapters and 50-line
+mode is only valid on VGA adapters.
+
+The default number of display lines is 25.  If your Soft-ICE display is
+on another computer connected by a serial cable, the display is fixed at 
+25 lines.
+
+----------------------------------------------------------------------
+
+			SERIAL
+
+
+SERIAL -- Redirect console to serial teminal.
+
+Syntax:
+	SERIAL [ ON [ com-port] [ baud rate] | OFF ]
+
+	com-port		This is a number from 1 to 4 that 
+				corresponds to COM1 COM2, COM3, or COM4.
+				The default is COM1.
+
+	baud-rate		This is the baud rate to use for serial
+				communications.  The default is to have
+				Soft-ICE automatically determine the fastest
+				possible baud rate that can be used.
+
+Comments:
+	
+Debugging on a serial console requires a second IBM compatible PC running
+MSDOS.  Any PC will do, including 8088, 8086 or 80286 machines.  You must
+first attach the computer to your host machine with a null modem cable.
+Before using the SERIAL command, you must run the REMOTE.EXE program on the
+second PC.  The syntax of REMOTE.EXE is as follows:
+
+	REMOTE ON com-port baud-rate
+
+-----------------------------------------------------------------------
+
+			WATCH
+
+WATCH -- Add a watch expression.
+
+Syntax:
+	WATCH [ size ] expression
+
+	size		B,W,D,I,E,U,F,S,L,A
+
+          		B - display a byte in hexadecimal format
+        	  	W - display a word in hexadecimal format
+	          	D - display a dword in hexadecimal pointer format
+          		I - display a word in decimal (int) format
+        	  	E - display a dword in decimal (long int) format
+	          	U - display a word in unsigned decimal format
+          		F - display a dword in unsigned decimal format
+          		S - display a 4-byte (float) FP real
+          		L - display an 8-byte (double) FP real
+			A - display a string of ASCII characters ( max 33 )
+
+Comments:
+
+The WATCH commands are used to display the results of expressions.  The 
+results of expression are displayed in the format of the size specified.
+If no size is specified, byte will be assumed.  The expressions being
+watched are displayed in the watch windows.  There can be up to eight
+watch expressions at a time.  Every time Soft-ICE screen is popped up,
+the watch window will display the expressions' current values.
+
+Each line in the watch windows contains the following information:
+
+	A watch number from 0 to 7.
+	
+	The hexadecimal address of the expression.
+
+	The current value of the expression displayed in the appropriate
+	format.
+
+	The expression being evaluated.
+
+Examples:
+
+	WATCHW FooVariable
+	WATCHD DS:ESI
+
+----------------------------------------------------------------------
+
+			CWATCH
+
+CWATCH -- Clear a watch expression.
+
+Syntax:
+	CWATCH list | *
+
+	list		This is a list of watch numbers from 0-7 seperated
+			by commas.  Watch-numbers are the numbers displayed
+			on the beginning of each line in the watch window.
+
+	*		Clear all watch expressions.
+
+Comments:
+
+The CWATCH command is used to clear one or more watch expressions from the 
+watch window.  After clearing the expressions, the ones still remaining in
+the window are renumbered sequentially starting at 0.  If there are no more
+watch expressions, the window disappears.
+
+-----------------------------------------------------------------------
+
+			STKWIN
+
+STKWIN -- Show or clear stack window
+
+Syntax:
+	STKWIN [ ON | OFF ]
+
+Comments:
+
+The STKWIN command adds a stack window to the Soft-ICE screen.  Each line
+shows a 4 digit ( hex ) displacement from BP and the 4 digit ( hex ) value
+of the word at that address. You can scroll the stack window using the
+ALT-Down-Arrow keys.  You can only edit the higlighted line.  To change a
+value in the stack window, use the ES command.
+
+-------------------------------------------------------------------------
+
+			ES
+
+ES -- Change highlighted value in stack window
+
+Syntax:
+	ES [ hex value ]
+
+	hex value			4 digit address to change
+
+Comments:
+
+The ES command will allow you to change stack values relative to BP in the
+stack window.  Similar to the E command.
+
+--------------------------------------------------------------------------
+
+			XRSET
+
+XRSET -- Reset back trace history buffer
+
+Syntax:
+	XRSET [ A | I | R ]
+
+	A		Logs addresses only.
+	I		Logs addresses and opcodes.
+	R		Logs addresses, opcodes, and registers. 
+
+Comments:
+
+The XRSET command resets the back trace history buffer.  This command
+should be executed before setting a back trace range if there is 
+unwanted instruction information in the back trace buffer.
+
+When using the I and R parameters, significantly more memory will be
+needed for the back trace buffer to store the information.  This memory
+is allocated on the Soft-ICE device line in CONFIG.SYS.
+
+A program (BTLOG.EXE) was added to write the back trace buffer to a file
+in ASCII text. The amount of information written depends on the option
+chosen in the XRSET command used to set up the back trace. The syntax of
+this program is similar to the SHOW command:
+
+                  BTLOG file-name start-line L length
+
+-------------------------------------------------------------------------
+
+			COLORS
+
+COLORS -- Change the colors of the information windows in Soft-ICE
+
+Syntax:
+	COLORS [ color | * ]
+
+	color		A hex number representing a color to change to
+
+	*		Skip changing the color for this field.
+
+Comments:
+
+The COLOR command accepts up to 12 parameters in the following order:
+
+	normal - highlight - reverse		for Register Window
+	normal - highlight - reverse		for Data Window
+	normal - highlight - reverse		for Code Window
+	normal - highlight - reverse		for Command Window
+
+The colors will only stay the way you change them until the computer is
+rebooted.  At that time, the colors will revert to the default colors.
+To change the colors on a permament basis, see the color line in
+S-ICE.DAT.
+
+Example:
+
+	COLORS * * * 4f 40 74 * * * 5d
+
+        Would leave the register and code window attributes the 
+        same, would change the data window attributes to 4F for 
+        normal, 40 for highlight, and 74 for reverse, and would 
+        change the command window normal attribute to 5D, leaving 
+        the highlight and reverse attributes unchanged.
+
+	
+	COLORS * * * * * * * * * 5d 40 74
+
+	Would leave colors in all windows except the command window the
+	same.  Would change the normal color of the command window to
+	5d, the highlight to 40 and the reverse to 74.
+
+-------------------------------------------------------------------------
+
+			R
+
+R -- Display or change register values
+
+Syntax:
+	R [ register name [[=]value]]
+
+	register name 		Any of the following:
+				EAX, AX, AH, AL
+				EBX, BX, BH, BL
+				ECX, CX, CH, CL
+				EDX, DX, DH, DL
+				EDI, DI, ESI, SI
+				EBP, BP, ESP, SP
+				CS, DS, ES, SS
+				FS, GS, FL
+
+	value			If register name is any name other than
+				FL, value is a hex value or an expression.
+				If register name is FL, value is a series
+				of one or more of the following flag
+				symbols, each optionalyy preceded by a plus
+				or minus sign:
+					O ( Overflow flag )
+					D ( Direction flag )
+					I ( Interrupt flag )
+					S ( Sign flag )
+					Z ( Zero flag )
+					A ( Auxiliary carry flag )
+					P ( Parity flag )
+					C ( Carry flag )
+
+Comments:
+
+If no parameters are supplied, all register and flag values are displayed,
+as well as the instruction at the current CS:IP address.
+
+If both register name and value are specified, the specifed register's
+contents are changed to the value.
+
+---------------------------------------------------------------------------
+
+			SL
+
+SL - Show window seperator lines
+
+Syntax:
+
+	SL
+
+Comments:
+
+The SL command puts borders between each of the data windows inside Soft-ICE.
+This command is particularly helpful for debugging on monochrome monitors.
+By default, the lines do not show.
+
+===========================================================================
+
+
+
+			NEW FEATURES
+			------------
+
+Display FS and GS segment registers.
+
+Highlight registers that have changed since the last time
+Soft-ICE was entered.
+
+Display "JUMP" or "NO JUMP" when stepping through a
+program if the current instruction is a conditional jump.
+
+Set breakpoints in VROOM overlays.
+
+Display of local (stack) variables by name.
+
+Changed BPR ... TW to work on data areas; this records 
+all instructions which write to that area.
+
+Using .PTH & .SRC Files
+
+	If there is no SET SRC=... statement within the 
+	environment, LDR.EXE will attempt to open a file named 
+	program-name.PTH. If such a file exists, LDR will read it 
+	and will use the paths specified within to look for the
+	source files. In version 2.71, this was modified to make 
+	LDR.EXE look for a program-name.PTH file first, so that it 
+	supersedes any SET SRC statement.
+
+	Before loading the source files, LDR.EXE will attempt to 
+	open a file named program.SRC. This file should be a list of
+	the source files to load - if the file exists, only those 
+	source files listed within it will be loaded.
+
+	The .PTH & .SRC files must be in the same directory as 
+	the program-name.EXE file. The syntax of a .PTH file is like
+	a path statement except that it has no "PATH = ", but just 
+	the paths. The following is an example:
+
+		c:\ldr\new;d:\bcdos\engine;c:\sibcdos\ui;
+
+	The format of a .SRC file is a list of source file names,
+	including extensions, each one on a separate line - for 
+	example:
+
+		asm.asm
+		sym.asm
+		volume.cpp
+		mgraph.c
+
+	Note that this file does not contain any drive or
+	directory information.
+
+
+Using Borland TDS Files for Debug Data
+
+	If a Borland .EXE file does not contain debug data,
+	LDR.EXE will try to open a file named program-name.TDS in 
+	the same directory as the .EXE file. If such a file exists, 
+	it will read the debug data from this file. 
+	
+	A TDS file can be generated by running TDSTRIP with the 
+	/s switch on a .EXE file which contains Borland debug data.
+	
+
+Passing Commands to Soft-ICE from LDR.EXE
+
+	LDR.EXE can pass commands to Soft-ICE in either of two 
+	ways: directly from the command line, or from a file 
+	specified on the command line. In both cases, the command 
+	string is executed when Soft-ICE pops up at the start of the
+	application program. If you want the program to execute 
+	without stopping at the Soft-ICE screen, put an "X" as the 
+	last command in the string.
+
+	To pass commands directly from the command line, the 
+	entire command string must be enclosed within slashes. The 
+	command string may include symbolic names and commands to 
+	set breakpoints. For example, the following string would set
+	a breakpoint on a variable named "base", set up the data
+	window to display this variable in word format, and then 
+	exit from Soft-ICE and begin executing the application 
+	program without popping up:
+
+        	ldr    /bpm base;dw base;x/     myprog
+
+	Note that there is a slash both before and after the 
+	command string - this allows using spaces within commands. 
+	Also note that commands are separated by semicolons. The 
+	last command in the string does not need a trailing semi-
+	colon.
+
+	To specify a file containing Soft-ICE commands, use a 
+	"/n" or "/N" switch in the LDR command line (There are no 
+	Soft-ICE commands which begin with "n" or "N", so this 
+	cannot be a direct command). There must NOT be a slash after
+	the file name - the first space after the filename is the 
+	terminator.
+
+	The command file either must be in the current directory
+	or else the full path must be specified. The command string 
+	within the file may use either CR's or CRLF's or semicolons
+	as separators between commands. The size of the Soft-ICE 
+	command buffer limits the file length to 200 characters.
+	
+	The syntax would be something like the following:
+
+        	ldr   /nc:\prog\softice.cmd     myprog
+
+
+==========================================================================
+
+
+			BUG FIXES
+			---------
+
+Show the application text screen when Video Memory is 
+being displayed rather than the Soft-ICE screen text as 
+was shown in earlier versions.
+
+Show the correct program length in the MAP command when 
+drivers or TSR's are loaded high; also show the HMA area,
+and highlight only one block as the current program. The 
+previous versions got confused when anything was loaded
+high.
+
+Added unassembly of the JECXZ instruction. Also fixed 
+display of special 32-bit instructions such as CWDE and 
+STOSD to show the correct mnemonic.
+
+Fixed display of location being addressed to show a 
+dword when the operand size is 32-bits, and on LES, LDS, 
+LSS, LFS and LGS instructions.
+
+Fixed display of location being addressed to show a 
+dword when instruction is a far jump or far call (opcode 
+FF).
+
+Fixed problem with setting breakpoints in overlays that 
+were not yet loaded. BPX type breakpoints can now be set 
+at symbolic names within overlays. NOTE: The Addendum to 
+versions 2.5 and 2.6 states that module names can be used
+for setting breakpoints; this is not correct. Symbolic 
+names within the overlays must be used.
+
+Fixed problem in displaying source within overlays when 
+more than one overlay is loaded.
+
+Fixed the Assemble command to recognize 32-bit opcodes.
+
+Fixed a keyboard problem caused by sending 60H out to 
+port 64H. This would hang any system that did not have a 
+PS2 mouse.
+
+Fixed ALTSCR bug in Soft-ICE, where the ALT screen would
+go blank.
+
+Fixed an error in the 910H back door command, which puts
+a null-terminated message in the Soft-ICE command window 
+where it is displayed when Soft-ICE pops up. The error 
+caused only part of the message to be displayed.
+
+Changed LDR to put MSC7 public symbols into the module 
+which actually contains them. This allows breakpoints to 
+be set on symbol names within MSC7 overlays.
+
+Fixed a problem where PUSHFD or POPFD instructions would
+cause a GP fault in Soft-ICE if run with BREAK ON. 
+
+Changed processing of symbol names to allow them to 
+begin with "@", and to recognize unmangled names as well 
+as their complex mangled equivalents.
+
+Fixed a problem where the IP register was treated as a 
+byte register when reading its contents, so a command such
+as "U CS:IP"  or  "D CS:IP"  would read only the lower 
+byte of IP, set the upper byte to 0 and display the code 
+or data at that address.
+
+Fixed a problem in the small window mode where some 
+screens were not updated if the user exited to DOS and 
+popped up Soft-ICE again. Parts of the Soft-ICE screen 
+would still show the characters and attributes which had 
+been in those places on the DOS screen.
+
+Fixed a bug which occurred only when the /EMM switch was
+used; if a TSR was loaded using LDR, and EXIT was keyed 
+when it popped up, and if the TSR then was loaded without 
+using LDR, Soft-ICE would pop up with a GP fault.
+
+Fixed a bug where the Soft-ICE screen would be blank if 
+the application or DOS set the video page to something 
+other than page 0.
+
+Fixed a bug in the A (assemble) command where the 
+generated code had the wrong registers. 
+
+Fixed a bug in the BPIO handler when the operand of the 
+I/O instruction was EAX.
+
+Fixed a bug in the MAP command when Soft-ICE was popped 
+up while loading a driver (either the initial load or 
+after a BOOT command). The DOS structures are incomplete 
+at this point, and Soft-ICE did not handle this problem 
+correctly.
+
+Several problems associated with very large debug data,
+where segment limits were being exceeded, causing a GP 
+fault.
+
+
+
+
+
+
+
+

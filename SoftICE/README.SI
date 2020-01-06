@@ -1,0 +1,1025 @@
+	  SOFT-ICE FOR DOS OPERATING PROBLEMS FILE
+		   Updated 11/08/94
+
+	  List of subjects within this file
+
+  1.  SOURCE OUT OF SYNCH OR NO SOURCE DISPLAY
+  2.  EXE NOT FOUND
+  3.  NO SOURCE DISPLAY OR CANNOT FIND SOURCE
+  4.  CTRL-ALT-DEL DOESN'T WORK
+  5.  STRUCTURES NOT DISPLAYED
+  6.  NETWORK TIMEOUT
+  7.  VCPI DOESN'T WORK
+  8.  SOFT-ICE HANGS AFTER BEING ENTERED AND EXITED
+  9.  OUT OF SYMBOL SPACE
+  10. ALT-SYS-RQ HANGS ON EXIT
+  11. BPINT 2 BYTES OFF IN CODE
+  12. ACTION NMI DOESN'T TRANSFER TO CV
+  13. BACK TRACE DOESN'T WORK
+  14. KEYBOARD LOCKS AFTER NUM-LOCK OR CAPS-LOCK
+  15. LONG PATH TO .EXE FILE IS TRUNCATED
+  16. .COM FILE
+  17. PRT-SC NOT WORKING ON OLD-STYLE KEYBOARD
+  18. "INT 10 DOES NOT POINT TO..."
+  19. VERTICAL LINES ON SCREEN
+  20. TAPE BACKUP DOESN'T WORK WHEN S-ICE INSTALLED
+  21. OLIVETTI LAPTOP KYBD LOCKS UP
+  22. KEYBOARD 1 CHAR OFF
+  23. PROGRAM BLOWS UP WHEN LOADED WITH LDR
+  24. BPAND DOESN'T WORK
+  25. LOAD HI AREA IS NOT CLEARED ON WARM BOOT
+  26. COMPAQ ProSignia 486 WITH EISA SCSI DRIVE (VIRTUAL DMA)
+  27. USING SOFT-ICE WITH AN ADAPTEK SCSI DRIVE
+  28. MIXED BC/SI SCREEN OR BPM ON STACK DOESN'T WORK
+  29. USING FOREIGN KEYBOARDS
+  30. DEBUGGING DOS-EXTENDED OR PROTECTED MODE PROGRAMS
+  31. SOFT-ICE REBOOTS 
+  32. INVALID OP-CODE REPORTED BY Soft-ICE
+  33. GP FAULT REPORTED BY Soft-ICE
+  34. GP FAULT WHILE LOADING MSC 7/8 PROGRAM
+  35. BOUNDS-CHECKER "STACK" GIVES GP FAULT WHEN SOFT-ICE IS LOADED
+  36. USING WITH CODEVIEW 4.0
+  37. RUNNING IN A DOS BOX
+  38. TRYING TO DISPLAY FLOATING POINT NUMBERS
+  39. RUNNING OUT OF MEMORY WITH BORLAND 4.0 IDE
+  40. HOT KEY FAILS TO POP UP Soft-ICE
+  41. USING MEMORY ABOVE 16 MEG
+  42. "NO HIGH MEMORY AVAILABLE" MESSAGE 
+  43. "CAN'T FIND S-ICE.EXE" MESSAGE WHEN RUNNING UPDATESI.EXE
+  44. USING WITH OVERLAYED PROGRAMS
+  45. USING WITH SPAWNED PROGRAMS
+  46. LOADING DOUBLESPACE HIGH
+  47. "Error Loading A Source File"
+  48. FAULT WHILE TRYING TO DISPLAY A GLOBAL SYMBOL
+  49. ALTSCR DOES NOT WORK IN VERSION 2.7
+  50. GPF ON PUSH FD OR POP FD ( using back door command/BREAK ON )
+  51. LDR OF TSR CAUSES A BLOW UP THE NEXT TIME THE TSR IS RUN
+  52. WINDOWS WONT'T LOAD WHEN SI-DOS IS PRESENT	
+  53. REGISTER WINDOW OVEWRITTEN WITH DS:XXXX IN LOWER RIGHT	
+  54. SOFT-ICE DOES NOT POP UP PROPERLY WHEN RUNNING BRIEF
+  55. USING SOFT-ICE WITH QL10DOS.SYS
+  
+  The following apply to Versions 2.62 and EARLIER ONLY !!!!
+
+  56. FLOPPY HANGS WHEN SOFT-ICE INSTALLED (GP ERROR IN CACHE)
+  57. TURBO DEBUGGER IN 43-LINE MODE
+  58. WRONG LINE #'S IN "STACK" COMMAND
+  59. GP ERROR DISASSEMBLING OR STEPPING THRU CODE
+  60. "ENTER PATH..." FOR BORLAND C++
+  61. USING SOFT-ICE 2.60 & EARLIER WITH MSVC or BORLAND 3.1
+  62. USING SOFT-ICE 2.5x & EARLIER WITH MICROSOFT C/C++ 7.00
+  63. BPM BREAKPOINT REBOOTS (SOFT-ICE VERSION 2.60-2.62)
+  64. BORLAND 4.0 PROGRAMS DO NOT LOAD INTO SOFT-ICE
+  65. SNOW ON SCREEN WHEN USING WINDOWS (REAL MODE)
+  66. LOADING IN OVER 16M MEMORY OR 16M MEMORY NOMINAL
+  67. COMPAQ REBOOTS WHEN TRYING TO LOAD SOFT-ICE
+  68. USING SOFT-ICE ON A PENTIUM SYSTEM
+  69. LDR HANGS WHEN LOADING SYMBOLS
+  70. BAD PRINTOUT OF SOURCE LINES IN BACK TRACE
+  71. BACK TRACE PRINTOUT HAS LONG BLOCKS OF SPACES
+  
+  -------------------------------------------------------------------
+  1.  SOURCE OUT OF SYNCH OR NO SOURCE DISPLAY
+  -------------------------------------------------------------------
+  Problem: Source display is out of synchronism or no source is
+  displayed.
+  Solution: There are 3 reasons why this happens:
+   A header file (.h) has code or data within it. These files
+   should contain definitions and declarations only. This is the only
+   reason which applies to C language programs.
+   A module has no public symbol at the start, or has no public
+   symbols. This can occur in Pascal, Assembly and some other
+   languages.
+   A code module is not class "CODE". The linker will put this
+   module after the Data, separated from the rest of the Code. This
+   only applies to Assembly language programs.
+
+  -------------------------------------------------------------------
+  2.  EXE NOT FOUND
+  -------------------------------------------------------------------
+  Problem: Message ".EXE not found" displayed when doing LDR xxx.SYM 
+  on a driver.
+  Solution: make a .EXE file by copying the .SYM file.
+
+  -------------------------------------------------------------------
+  3.  NO SOURCE DISPLAY OR CANNOT FIND SOURCE
+  -------------------------------------------------------------------
+  Problem: no source display or cannot find source files
+
+  Reasons why no source display:
+	  1: no debug data in the .EXE file, and no .SYM file
+	  2: not enough /SYM space reserved
+	  3. no source line # info in debug data
+	  4. used LDR program-name.EXE
+  Reasons why cannot find source files:
+	  1. used path to LDR (becomes default path)
+	  2. did not SET SRC=....
+	  3. source files not in current directory
+
+  -------------------------------------------------------------------
+  4.  CTRL-ALT-DEL DOESN'T WORK
+  -------------------------------------------------------------------
+  Problem: Ctrl-Alt-Del won't reboot on IBM Model 55SX, Dell,
+  Northgate, DTK, AST and some other systems.
+  Solution: The keyboard controller on these systems does not
+  recognize the reboot command (send FE to port 64). To fix this,
+  change s-ice.exe as follows:
+
+  ren s-ice.exe s-ice.bin
+  debug s-ice.bin
+  -s cs:0 lffff b0 fe e6 64
+  (prints 2 addresses in xxxx:yyyy format)
+  -e address1 90 90 90 90 bb 01
+  -e address2 90 90 90 90 bb 01
+  -w
+  -q
+  ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  5.  STRUCTURES NOT DISPLAYED
+  -------------------------------------------------------------------
+  Problem: Soft-ICE does not display members of structures
+  Solution: You must find the base of the structure, then calculate
+  the offset of the member you wish to display, then dump that 
+  address.
+
+  -------------------------------------------------------------------
+  6.  NETWORK TIMEOUT
+  -------------------------------------------------------------------
+  Problem: Network disconnects when Soft-ICE is used.
+  Solution: When the Soft-ICE screen is popped up, all interrupts
+  are disabled. If it is left up too long, the server may disconnect
+  your workstation from the network. You should exit Soft-ICE every
+  10 minutes to allow the network to access your computer.
+  Alternatively, you may be able to increase the timeout. For
+  Netware 3.x, you can control the timeout with SET statements from
+  the console command line, or in AUTOEXEC.NCF.
+
+  -------------------------------------------------------------------
+  7.  VCPI DOESN'T WORK
+  -------------------------------------------------------------------
+  Problem: VCPI client programs like LOTUS, ORACLE, BORLAND IDE etc. 
+  don't work.
+  Solution: VCPI programs require the /EMM switch with at least
+  500K.
+
+  -------------------------------------------------------------------
+  8.  SOFT-ICE HANGS AFTER BEING ENTERED AND EXITED
+  -------------------------------------------------------------------
+  Problem: On systems with a JET Keyboard Controller chip, the
+  keyboard hangs after Soft-ICE is entered and exited.
+  Solution: Patch Soft-ICE as follows:
+	ren s-ice.exe s-ice.bin
+	debug s-ice.bin
+	-s 0 lffff b0 d0 e6 64
+	(prints address in xxxx:yyyy format)
+	-e yyyy+1 ee   (change d0 to ee)
+	-e yyyy+3 60   (change 64 to 60)
+	-w
+	-q
+	ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  9.  OUT OF SYMBOL SPACE
+  -------------------------------------------------------------------
+  Problem: LDR prints "out of symbol space"
+  Solution: This results when the LDR.EXE for version 2.0/2.1 is
+  used when version 2.5 or higher of S-ICE.EXE is loaded.
+
+  -------------------------------------------------------------------
+  10. ALT-SYS-RQ HANGS ON EXIT
+  -------------------------------------------------------------------
+	  Problem: On some systems, when Alt-Sys-Rq key is assigned to pop
+  up Soft-Ice, the system hangs upon exit.
+  Solution: there is a timing problem in some systems because of
+  the length of time it takes to complete the analysis of this key,
+  and so the system gets stuck in the "Alt On" state. The user either
+  must press the Alt key to release this state before exiting, or
+  must assign a different key to pop up Soft-ICE.
+
+  -------------------------------------------------------------------
+  11. BPINT 2 BYTES OFF IN CODE
+  -------------------------------------------------------------------
+  Problem: BPINT breakpoint displays code 2 bytes ahead of actual
+  INT.
+  Solution: "BREAK ON" is set in S-ICE.DAT. Delete it.
+
+  -------------------------------------------------------------------
+  12. ACTION NMI DOESN'T TRANSFER TO CV
+  -------------------------------------------------------------------
+  Problem: ACTION NMI doesn't transfer control to CodeView
+  Solution: BPX won't work with NMI, must use BPM-X. Also must set
+	up CodeView to intercept NMI.
+
+  -------------------------------------------------------------------
+  13. BACK TRACE DOESN'T WORK
+  -------------------------------------------------------------------
+  Problem: Back Trace operation doesn't work
+  Solution: When Soft-ICE is run with Bounds-Checker, BC monopolizes 
+  the Paging hardware, so the BPR commands in Soft-ICE do not work. 
+  The "BOUNDS OFF" command does not help. The only solution is to run
+  Soft-ICE separately.
+
+  -------------------------------------------------------------------
+  14. KEYBOARD LOCKS AFTER NUM-LOCK OR CAPS-LOCK
+  -------------------------------------------------------------------
+  Problem: Keyboard locks up after keying NUM-LOCK or CAPS-LOCK
+  Solution: Some early AMI BIOS ROM's have a timing problem in the
+  keyboard controller. Boot the system and read the BIOS serial
+  number: if it ends with KA,KB,KC,KD,KE or KF, this is one of the
+  bad chips. Even though AMI has not made these chips since 1986,
+  some computer manufacturers still have them in stock. The only
+  solution is to replace the keyboard controller chip. AMI contact:
+  Sam on 404-263-8181.
+
+  -------------------------------------------------------------------
+  15. LONG PATH TO .EXE FILE IS TRUNCATED
+  -------------------------------------------------------------------
+  Problem: Using LDR with long path to .EXE file, can't find file,
+  prints truncated path.
+  Solution: Use the SUBST command to create a virtual drive for a
+  long path.
+
+  -------------------------------------------------------------------
+  16. .COM FILE
+  -------------------------------------------------------------------
+  Problem: .COM file will not load properly
+  Solution: Delete the .EXE file if there is one. Note that because a 
+  .COM file does not contain debug info, you should run MSYM on the 
+  MAP file, LDR the program, and then do a SYMLOC CS to align. 
+
+  -------------------------------------------------------------------
+  17. PRT-SC NOT WORKING ON OLD-STYLE KEYBOARD
+  -------------------------------------------------------------------
+  Problem: Print Screen doesn't work with old (100) keyboard.
+  Solution: change s-ice.exe as follows:
+	 ren s-ice.exe s-ice.bin
+	 debug s-ice.bin
+	 -s cs:0 lffff 80 fc 47
+	 (prints address)
+	 -u address
+	 kkkk:nnnn      CMP AH,47
+	  .
+	  .
+	  .
+	 kkkk:mmmm      TEST BYTE PTR [ZZZZ],20
+	  .
+	  .
+	  .
+	 kkkk:nnnn      CMP AL,2A
+	 kkkk:pppp      JZ XXXX
+	 kkkk:qqqq      CMP BYTE PTR [YYYY],00
+	 kkkk:rrrr      JZ WWWW
+   Change last two lines to:
+	 kkkk:qqqq      TEST BYTE PTR [ZZZZ],20
+	 kkkk:rrrr      JNZ WWWW
+   Typically this is f6 06 19 0a 20 75 (ZZZZ = 0A19)
+	 -w
+	 -q
+	 ren  s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  18. "INT 10 DOES NOT POINT TO..."
+  -------------------------------------------------------------------
+  Problem: displays message "INT 10 does not point to E000"
+  Solution: This message is displayed when the Video card is a
+  Hercules graphics adapter or some monochrome cards. Patch Soft-ICE
+  as follows:
+	 ren s-ice.exe s-ice.bin
+	 debug s-ice.bin
+	 -r        (get CS)
+	 -s cs+2000:0 lffff b8 00 e0
+	 (prints address in xxxx:yyyy format)
+	 -e xxxx:yyyy+2 ff   (change e0 to ff)
+	 -w
+	 -q
+	 ren s-ice.bin s-ice.exe
+
+
+  -------------------------------------------------------------------
+  19. VERTICAL LINES ON SCREEN
+  -------------------------------------------------------------------
+  Problem: Vertical lines on the screen when running graphics
+  programs.
+  Solution: EMM Map is set up for backfilling; run EMMSETUP and
+  restore A000 block to VVVV so video memory is not being accessed
+  incorrectly.
+
+  -------------------------------------------------------------------
+  20. TAPE BACKUP DOESN'T WORK WHEN S-ICE INSTALLED
+  -------------------------------------------------------------------
+  Problem: The tape backup fails.
+  Solution: This is caused by the time that Soft-ICE takes up
+  during an interrupt call. It can result from Soft-ICE being loaded
+  into 16-bit memory. Try loading Soft-ICE into 32-bit extended
+  memory and see if that works. Also, unload Soft-ICE thru "S-ICE /U"
+  on the command line. Then do the tape backup and reload Soft-ICE
+  thru "S-ICE".
+
+  -------------------------------------------------------------------
+  21. OLIVETTI LAPTOP KYBD LOCKS UP
+  -------------------------------------------------------------------
+  Problem: Keyboard locks up on SCROLL LOCK, NUM LOCK or CAPS LOCK
+  on an Olivetti laptop (M316) with Olivetti BIOS.
+  Solution: Install Lantistic's KBFLOW program. This is public
+  domain software.
+
+  -------------------------------------------------------------------
+  22. KEYBOARD 1 CHAR OFF
+  -------------------------------------------------------------------
+  Problem: Keyboard is 1 character behind the actual keystrokes.
+  Solution: This problem occurred when the program LAN MAN REDIRECTOR
+  was installed.
+
+  -------------------------------------------------------------------
+  23. PROGRAM BLOWS UP WHEN LOADED WITH LDR
+  -------------------------------------------------------------------
+  Problem: Program loads OK, but blows up when loaded with LDR.
+  Solution: LDR changes the stack by 1 word. If the initialization
+  code uses absolute offsets to read data from the stack, it will
+  read the wrong locations.
+
+  -------------------------------------------------------------------
+  24. BPAND DOESN'T WORK
+  -------------------------------------------------------------------
+  The BPAND command does not work for BPX type breakpoints. This
+  includes F9 style point-and-shoot breakpoints. You must use a
+  hardware type of breakpoint such as BPIO or BPM X.
+
+  Also, the order in which the breakpoints are listed in the
+  BPAND command is not significant; they do not have to occur in that
+  specific order. The break will occur when all the breakpoints
+  listed have occurred at least once.
+
+
+  -------------------------------------------------------------------
+  25. LOAD HI AREA IS NOT CLEARED ON WARM BOOT
+  -------------------------------------------------------------------
+  Problem: On CTRL-ALT-DEL the programs loaded high remain in place,
+  so no space is available to load high.
+  Solution: Erase the first 16 bytes of the 1st load high area. The
+  program ZERO.SYS should be loaded immediately after Soft-ICE in the
+  CONFIG.SYS file to do this automatically upon rebooting.
+
+  -------------------------------------------------------------------
+  26. COMPAQ ProSignia 486 WITH EISA SCSI DRIVE (VIRTUAL DMA)
+  -------------------------------------------------------------------
+  Problem: On bootup, displays a message that the current EMS memory
+  manager does not support Virtual DMA.
+  Solution: Load the driver SCSIC710.SYS in your CONFIG.SYS file.This
+  driver is available on our BBS or from Compaq. The load syntax is
+  as follows:
+
+  DEVICE = [drive:][path]SCSIC710.SYS [/N] [/D]
+
+  PARAMETERS:
+
+  /N   This parameter directs SCSIC710 not to display on-screen
+	   messages.
+
+  /D   This parameter forces SCSIC710 to always use double
+	   buffering.
+
+  NOTE:  When using this driver in conjunction with Compaq's
+  EXTDISK.SYS, EXTDISK must be loaded first.
+
+  -------------------------------------------------------------------
+  27. USING SOFT-ICE WITH AN ADAPTEK SCSI DRIVE
+  -------------------------------------------------------------------
+  When using Soft-ICE with an Adaptek SCSI drive, the SCSI driver
+  ASPI4DOS.SYS must be loaded before S-ICE.EXE in the CONFIG.SYS.
+  The user reporting this also had FUNNEL.SYS and UMB.SYS installed,
+  and was able to load all his driver and T&SR's high.
+
+  -------------------------------------------------------------------
+  28. MIXED BC/SI SCREEN OR BPM ON STACK DOESN'T WORK
+  -------------------------------------------------------------------
+  Problem: Mixed BC/SI screen, or BPM that doesn't catch a change
+  on the stack.
+  Solution: This can occur when a stack is outside the program
+  space and Bounds-Checker is being run with Soft-ICE. If a CALL is
+  made, a Page Fault occurs when the return address is written to the
+  stack, and it overwrites the return address. Also, if there is a
+  breakpoint on a PUSH instruction, before the Bounds-Checker screen
+  is completely written, it is overwritten by the Soft-ICE screen.
+  One way to identify this type of problem is that it won't happen if
+  Soft-ICE is single-stepped.
+  The only cure is to change to a stack within the program space.
+
+  -------------------------------------------------------------------
+  29. USING FOREIGN KEYBOARDS
+  -------------------------------------------------------------------
+   Soft-ICE supports only the US keyboard: however, in some cases
+  it is possible to patch it to allow using foreign keyboards.
+  To simplify this process, we have written a program to replace
+  the keycode table with a file containing another table, plus a
+  document describing how to make such a keycode table file. It is on
+  our BBS under the name KEYBOARD.ZIP, and on CompuServe under the 
+  name KEYBOA.ZIP. It includes a example for the German keyboard.
+
+  -------------------------------------------------------------------
+  30. DEBUGGING DOS-EXTENDED OR PROTECTED MODE PROGRAMS
+  -------------------------------------------------------------------
+  Problem: Soft-ICE GPFs when trying to debug a DOS-EXTENDED program
+  or a protected mode program.
+  Solution: There is no workaround for this. Soft-ICE is a protected-
+  mode program and cannot be run with other protected-mode programs.
+
+  -------------------------------------------------------------------
+  31. SOFT-ICE REBOOTS 
+  -------------------------------------------------------------------
+  Problem:  System reboots when you install Soft-ICE. 
+  Solution: There are several reasons why Soft-ICE may reboot your 
+  system. They are:
+
+  1.) Failure to run EMMSETUP on S-ICE.EXE
+  2.) Having POWER.EXE in config.sys on low power systems 
+  3.) Installing HIGHMEM.SYS before S-ICE.EXE in config.sys
+  4.) If reboot is occuring on a BPM (R) with Soft-ICE 2.60-2.62,
+  see item #55
+  5.) If running on a PENTIUM with Soft-ICE ver 2.61 or less, see
+  item #59 in this document.
+  6.) If running on a COMPAQ with Soft-ICE ver 2.61 or less, see
+  item #60 in this document.
+  7.) It has been reported that some systems with CYREX cpu's reboot.
+  There is no known fix for this problem.
+  8.) Many 486 systems will reboot if you attempt to run S-ICE.EXE
+  from the DOS command line. The cause is unknown. There is  
+  currently no fix for this problem.
+  9.) On certain older COMPAQ models the following patch is needed
+  to run with Soft-ICE 2.62 and greater:
+ 
+   Patch Soft-ICE as follows
+   ren s-ice.exe s-ice.bin
+   debug s-ice.bin
+   -s 0 lffff 'XOM'
+   (prints out an address in xxxx:yyyy format. Offset should be 17B3)
+   -e xxxx:(offset - 2) 30 33 43
+   -w
+   -q
+   ren s-ice.bin s-ice.exe
+  
+  -------------------------------------------------------------------
+  32. INVALID OP-CODE REPORTED BY Soft-ICE
+  -------------------------------------------------------------------
+  Problem: An INVALID OP-CODE is reported by Soft-ICE.
+  Solution: The following things can cause INVALID OP-CODE ERRORS:
+   1.) Failure to run EMMSETUP on S-ICE.EXE before installing
+   2.) Running with SMARTDRIVE or another DISK CACHING program  
+   3.) If Borland compiler, put /EMM 500 in S-ICE.EXE line of 
+	  CONFIG.SYS.
+
+  -------------------------------------------------------------------
+  33. GP FAULT REPORTED BY Soft-ICE 
+  -------------------------------------------------------------------
+  Problem: A GP fault is reported by Soft-ICE.
+  Solution: The following things can cause G.P. Faults:        
+   1.) Failure to run EMMSETUP on S-ICE.EXE before installing
+   2.) Running with another Memory Manager (HIGHMEM.SYS is ok)    
+   3.) Running with SMARTDRIVE or another DISK CACHING program  
+   4.) Running Soft-ICE versions prior to 2.5 under DOS 6.x
+
+  -------------------------------------------------------------------
+  34. GP FAULT WHILE LOADING MSC 7/8 PROGRAM
+  -------------------------------------------------------------------
+  Problem: A GP fault occurs while loading a MSC 7/8 (Visual C)
+   program. The DI register is FFFF and the IP register is A99C.
+  Solution: This occurs when a module compiled with debug data
+   has no line number information. The code which processes line 
+   number information does not have a check for a count of zero, so it
+   handles it as if the count were 64K. The following patch inserts a 
+   check for zero into the code.
+
+  Patch LDR.EXE as follows:
+
+	ren ldr.exe ldr.bin
+	debug ldr.bin
+	-s 0 lffff 0f 84 11 00 53
+	(displays address)
+	-e address     74 11 53 26 8b 04 bb 06 00 f7 e3 8b d8 2e 8b 97
+	-e address+10  ce 09 5b 83 c6 04 83 c3 04 e3 1a
+	-w
+	-q
+	ren ldr.bin ldr.exe
+
+  -------------------------------------------------------------------
+  35. BOUNDS-CHECKER "STACK" GIVES GP FAULT WHEN SOFT-ICE IS LOADED
+  -------------------------------------------------------------------
+  Problem: A GP fault occurs from doing a STACK command in Bounds-
+   Checker while Soft-ICE is loaded. The IP for the code displayed is
+   0000, and the ESI register has FFFF in the upper word.
+  Solution: When Soft-ICE is loaded, Bounds-Checker minimizes its
+   memory requirements by using some of the Soft-ICE routines. Some of
+   these routines put an FFFF in the upper word of the EBX register
+   when Bounds-Checker expects it to be 0000. EBX is later added to 
+   ESI, and when ESI is subsequently used as a pointer, the invalid
+   address it contains causes a GP fault. This can be corrected by 
+   zeroing the upper word of EBX with a MOVZX EBX,BX instruction.
+
+  Patch S-ICE.EXE as follows:
+
+	ren s-ice.exe s-ice.bin
+	debug s-ice.bin
+	-s 0 lffff 66 03 f3 26 67 8b 06
+	(displays address)
+	-e address     66 0f b7 db 66 03 f3 26 67 8b 06 80 f9 01 74 07
+	-e address+10  80 f9 02 74 1f
+	-w
+	-q
+	ren s-ice.bin s-ice.exe
+  
+  -------------------------------------------------------------------
+  36. USING WITH CODEVIEW 4.0
+  -------------------------------------------------------------------
+  CODEVIEW 4.0 that comes with Microsoft C-7 and C-8 is a protected
+  mode program and cannot be run with Soft-ICE for DOS.
+
+  -------------------------------------------------------------------
+  37. RUNNING IN A DOS BOX
+  -------------------------------------------------------------------
+  Soft-ICE for DOS cannot be used to debug an application that is    
+  running in a Windows DOS box. Use Soft-ICE for windows instead.
+  
+  -------------------------------------------------------------------
+  38. TRYING TO DISPLAY FLOATING POINT NUMBERS
+  -------------------------------------------------------------------
+  Floating point numbers cannot be displayed by Soft-ICE for DOS.
+
+  -------------------------------------------------------------------
+  39. RUNNING OUT OF MEMORY WITH BORLAND 4.0 IDE
+  -------------------------------------------------------------------
+  If you are out of memory running with the Borland 4.0 IDE try 
+  increasing the value of the /EMM switch on the S-ICE.EXE line in 
+  CONFIG.SYS.
+  
+  -------------------------------------------------------------------
+  40. HOT KEY FAILS TO POP UP Soft-ICE
+  -------------------------------------------------------------------
+  Problem: Keying the hot key sequence fails to pop up Soft-ICE 
+  screen.
+  Solution: Turn on the BREAK option from the Soft-ICE command line.
+  This should prevent the keyboard from being disabled and allow you
+  to pop up the SI window at any time. This option will make your
+  program run somewhat slower.
+  
+  -------------------------------------------------------------------
+  41. USING MEMORY ABOVE 16 MEG
+  -------------------------------------------------------------------
+  You cannot use Soft-ICE for DOS with memory above 16 meg. Soft-ICE
+  loads itself at the top of the first 16 meg and fools DOS into 
+  thinking that is all there is.
+  
+  -------------------------------------------------------------------
+  42. "NO HIGH MEMORY AVAILABLE" MESSAGE 
+  -------------------------------------------------------------------
+  This usually means you have allocated to much memory with the /EMM,
+  /EXT or the /SYM switches on the S-ICE.EXE line in CONFIG.SYS.
+  
+  -------------------------------------------------------------------
+  43. "CAN'T FIND S-ICE.EXE" MESSAGE WHEN RUNNING UPDATESI.EXE
+  -------------------------------------------------------------------
+  This occurs when you are trying to update Soft-ICE to a newer 
+  version using updatesi.exe. Check your path to current S-ICE.EXE.
+  Make sure it is not on a DOS 6.x compressed volume. If it is the
+  update program will not be able to find it.
+
+  -------------------------------------------------------------------
+  44. USING WITH OVERLAYED PROGRAMS
+  -------------------------------------------------------------------
+  Soft-ICE works very well with older Microsoft overlay managers. It 
+  does not work with Microsoft MOVE or Borland VROOM. RTLink has 
+  caused many problems in the past that will be addressed in the 2.7 
+  release of Soft-ICE.
+  
+  -------------------------------------------------------------------
+  45. USING WITH SPAWNED PROGRAMS
+  -------------------------------------------------------------------
+  Soft-ICE for DOS allows for the loading of two symbol tables.
+  See the TABLE command in the Addendum to the manual for details.
+  
+  -------------------------------------------------------------------
+  46. LOADING DOUBLESPACE HIGH
+  -------------------------------------------------------------------
+  DOUBLESPACE cannot be loaded with with Nu-Mega's LD.SYS. You should
+  use UMB.SYS with LOADHIGH commands.
+  
+  -------------------------------------------------------------------
+  47. "Error Loading A Source File"
+  -------------------------------------------------------------------
+  Problem: This message appears when loading a program with LDR
+  Solution: The following are reasons for this message
+	* Path to the source files is too long.  Max 40 characters
+	* File is somehow protected by DOS
+	* File has been packed by something other than CV-PACK
+	* File has been written on a UNIX style editor that puts
+	  only line feeds at the end of lines instead of
+	  carriage return - line feed
+
+  ------------------------------------------------------------------
+  48. FAULT WHILE TRYING TO DISPLAY A GLOBAL SYMBOL
+  ------------------------------------------------------------------
+
+  Problem : Soft-ICE blows up when trying to display a global symbol
+	  Version 2.7 only
+  Solution : Patch S-ice.exe as follows:
+
+	ren s-ice.exe s-ice.bin
+	debug s-ice.bin
+	-r
+	-s cs+1000:0 lffff 01 74 28
+	 ( prints out an address in xxxx:yyyy format )
+	-e xxxx:yyyy 02
+	-w
+	-q
+	ren s-ice.bin s-ice.exe
+
+  -----------------------------------------------------------------
+  49. ALTSCR DOES NOT WORK IN VERSION 2.7
+  -----------------------------------------------------------------
+  Problem: ALTSCR command does not work in version 2.7
+  Solution: Patch S-ICE.EXE as follows:
+	
+	ren s-ice.exe s-ice.bin
+	debug s-ice.bin
+	-r
+	-s cs+1000:0 lffff 80 3E 14 78
+	( Prints out two addresses in xxxx:yyyy format )
+	-e xxxx:yyyy C7 06 C8 99 28 00 90
+	( Use the first address printed )
+	-e xxxx:yyyy C7 06 C8 99 30 00 90
+	( Use the second address printed )
+	-w
+	-q
+	ren s-ice.bin s-ice.exe
+
+  -----------------------------------------------------------------
+  50. GPF ON PUSH FD OR POP FD ( using back door command/BREAK ON )
+  _________________________________________________________________
+
+  Problem: A GPF occurs in SI on a PUSH FD or POP FD instruction.
+  Solution: Patch S-ICE.EXE as follows
+
+	ren s-ice.exe s-ice.bin
+	debug s-ice.bin
+	-s 0 lffff 0F 85 EA FA
+	  ( prints out an address in xxxx:yyyy fashion )
+	-e xxxx:yyyy 0F 85 09 FB
+	-w
+	-q
+	ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  51. LDR OF TSR CAUSES A BLOW UP THE NEXT TIME THE TSR IS RUN
+  -------------------------------------------------------------------
+  Problem: This problem was shown when a guy loaded a TSR into Soft
+  ICE, then did an EXIT, then ran the TSR again which caused a fault
+  inside of Soft-ICE. It was narrowed down to the fact that Soft-ICE
+  was using the ECX register but had never zeroed the high half.
+  
+  Solution:  Patch S-ICE.EXE as follows:
+
+	ren s-ice.exe s-ice.bin
+	debug s-ice.bin
+	-s 0 lffff 8A 0E 41 0D FE C1 B5 00 F3
+		( prints out address in xxxx:yyyy format )
+	-e xxxx:yyyy 66 31 c9 8a 0e 41 0d 41
+	-w
+	-q
+	ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  52. WINDOWS WON"T LOAD WHEN S-ICE IS PRESENT
+  -------------------------------------------------------------------
+  Solution:
+	Make sure BREAK is OFF inside Soft-ICE
+	Put a /M:1 after HIMEM.SYS in CONFIG.SYS
+
+  -------------------------------------------------------------------
+  53. REGISTER WINDOW OVEWRITTEN WITH DS:XXXX IN LOWER RIGHT	
+  -------------------------------------------------------------------
+  Problem:  The FLAGS in the register window are overwritten by
+  a referenced memory address ( DS:XXXX= ).
+  Solution:
+	Patch S-ICE.EXE as follows:
+
+	ren s-ice.exe s-ice.bin
+	debug s-ice.bin
+	-s cs+1000 lffff E8 91 FC
+	  ( prints out an address in xxxx:yyyy format )
+	-e xxxx:yyyy 90 90 90
+	-w
+	-q
+	ren s-ice.bin s-ice.exe
+
+   -----------------------------------------------------------------
+   54. SOFT-ICE DOES NOT POP UP PROPERLY WHEN RUNNING BRIEF
+   -----------------------------------------------------------------
+   Problem: When running BRIEF ( editor is actually on screen ), 
+   CTRL-D causes the machine to beep and a reboot is needed.
+
+   Solution: This is a problem that occurred since 2.7 and the addition
+   of 43 and 50 line mode.  An extra video page is being used and
+   an equation in Soft-ICE was producing a negative result.
+   Patch s-ice.exe as follows
+
+	ren s-ice.exe s-ice.bin
+	debug s-ice.bin
+	-r
+	-s cs+1000 lffff 66 2B CE F3
+	  ( prints out an address in xxxx:yyyy format )
+	-e xxxx:yyyy 90 90 90
+	-s cs+1000 lffff 66 2B CF
+	  ( prints out an address in xxxx:yyyy format )
+	-e xxxx:yyyy 90 90 90
+	-w
+	-q
+	ren s-ice.bin s-ice.exe
+
+    ---------------------------------------------------------------
+    55. USING SOFT-ICE WITH QL10DOS.SYS
+    ---------------------------------------------------------------
+    Problem:  When SL10DOS.SYS is loaded, you get errors on disk
+    accesses.  QL10DOS.SYS is a new driver being shipped for SCSI
+      hard disks.
+
+      Solution: You must load drivers in CONFIG.SYS in the following
+      order-
+		device=s-ice.exe
+		device=ql10dos.sys
+		device=himem.sys
+		device=funnel.sys
+	
+
+
+  -------------------------------------------------------------------
+
+  *******************************************************************
+  The following apply to Versions 2.62 and EARLIER ONLY !!!!
+  *******************************************************************
+
+  -------------------------------------------------------------------
+  56. FLOPPY HANGS WHEN SOFT-ICE INSTALLED (GP ERROR IN CACHE)
+  -------------------------------------------------------------------
+  Problem: Floppy hangs when Soft-ICE is installed, on protected
+  mode instruction in BIOS (F000:xxxx). Instruction is MOV EAX,CRx.
+  Analysis: Some older Phoenix BIOS ROM's handled cache operations
+  in protected mode. BIOS ROM must be replaced or you must update to
+  Soft-ICE 2.6+, which emulates this instruction without generating
+  a protection error. Some Gateway 2000 486's have this older BIOS.
+
+  -------------------------------------------------------------------
+  57. TURBO DEBUGGER IN 43-LINE MODE
+  -------------------------------------------------------------------
+  Problem: Soft-ICE with Turbo Debugger in 43 line mode beeps and
+  dies.
+  Solution: patch s-ice.exe as follows:
+   ren s-ice.exe s-ice.bin
+   debug s-ice.bin
+   -r       (get value of CS register)
+   -e (cs+1000h):b993 7f
+   -w
+   -q
+   ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  58. WRONG LINE #'S IN "STACK" COMMAND
+  -------------------------------------------------------------------
+  Problem: Line numbers displayed by STACK command are wrong,
+  typically very large (28xxx)
+  Solution: patch s-ice.exe as follows:
+	ren s-ice.exe s-ice.bin
+	debug s-ice.bin
+	-e cs:626f
+	   (should print "08.")
+	   0a             (change 08 to 0a)
+	-w
+	-q
+	ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  59. GP ERROR DISASSEMBLING OR STEPPING THRU CODE
+  -------------------------------------------------------------------
+  Problem: General Protection Error when disassembling or stepping
+  thru code.
+  Solution: patch s-ice.exe as follows:
+  ren s-ice.exe s-ice.bin
+  debug s-ice.bin
+  (Note: in newer versions search from CS+1000)
+  -r
+  -s cs:0 lffff 81 7c 01 4e 56 74
+  (prints address in xxxx:yyyy format; offset should be E3D8)
+  -e xxxx:yyyy 90 90 90 90 90 90 90 90 90 90 90 90 90 (13 NOP's)
+  -w
+  -q
+  ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  60. "ENTER PATH..." FOR BORLAND C++
+  -------------------------------------------------------------------
+  Problem: Prints "enter path for" for all source files.
+  Solution: Patch LDR.EXE as follows:
+	 ren ldr.exe ldr.bin
+	 debug ldr.exe
+	 -e 8cec
+	  02. 03         (change 02 to 03)
+	 -w
+	 -q
+	 ren ldr.bin ldr.exe
+
+  -------------------------------------------------------------------
+  61. USING SOFT-ICE 2.60 & EARLIER WITH MSVC or BORLAND 3.1
+  -------------------------------------------------------------------
+  Problem: Can't load a MSVC or BORLAND 3.1 program into Soft-ICE
+  Solution: To be compatible with MSVC or BORLAND 3.1, you must have
+	version 2.62 or higher.
+
+  -------------------------------------------------------------------
+  62. USING SOFT-ICE 2.5x & EARLIER WITH MICROSOFT C/C++ 7.00
+  -------------------------------------------------------------------
+  Problem: With the C/C++ 7.00 compiler, Microsoft changed the
+	   format of the CodeView debug data.
+  Solution: Soft-ICE cannot read the C/C++ debug data directly
+  from the .EXE file. Use the MSYM method as follows:
+
+  Link without the "/CO" switch but with the "/MA" and "/LI"
+  switches.
+  After linking, run our MSYM.EXE utility on the .MAP file to
+  create a .SYM file which contains the debug data.
+
+  If there is no debug data in the .EXE file, Soft-ICE will look
+  for a .SYM file.
+
+  You should use MSYM version 2.4 (dated 8/24/92) or later; it can
+  be downloaded from this BBS. Earlier versions may work in some
+  cases.
+  NOTE: Microsoft's MAPSYM utility may create a .SYM file as part
+  of the compilation process. This .SYM file does not contain all the
+  debug data needed by Soft-ICE. You must use our MSYM.
+
+  -------------------------------------------------------------------
+  63. BPM BREAKPOINT REBOOTS (SOFT-ICE VERSION 2.60-2.62)
+  -------------------------------------------------------------------
+  Problem: BPM breakpoint with R verb or with any conditional
+  qualifier reboots the system when the breakpoint occurs (Soft-ICE
+  Version 2.60 - 2.62).
+  Solution: When a Soft-ICE source file was modified so that it
+  also could be used for Soft-ICE/W, some code which handled hardware
+  breakpoint re-entrancy was accidently deleted.
+	During the handling of a BPM breakpoint, if the "R" verb was
+  chosen or if there is a conditional qualifier, the contents of the
+  breakpoint location are read. Reading this address causes another
+  breakpoint to be generated, which re-enters the breakpoint handler
+  and reads the location again, causing still another, and so on
+  until the stack overwrites something and the system reboots.
+	To fix this, patch S-ICE.EXE as follows:
+
+   ren s-ice.exe s-ice.bin
+   debug s-ice.bin
+   -s 0 lffff f7 46 30 02 00 0f 85 00 00
+	 (prints an address in xxxx:yyyy format)
+   -e xxxx:yyyy     0f 21 f0 66 50 66 33 c0 0f 23 f0 66 58 a2 64 01
+   -e xxxx:yyyy+10  a9 00 40 0f 85 a0 00 f7 46 30 02 00 0f 84 92 ff
+   -w
+   -q
+   ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  64. BORLAND 4.0 PROGRAMS DO NOT LOAD INTO SOFT-ICE
+  -------------------------------------------------------------------
+  Problem: Can't load source or symbols for Borland 4.0 problems
+  Solution: Soft-ICE versions 2.62 and lower cannot handle Borland 
+  4.0 symbols.  The only solution is to upgrade.
+
+  -------------------------------------------------------------------
+  65. SNOW ON SCREEN WHEN USING WINDOWS (REAL MODE)
+  -------------------------------------------------------------------
+  Problem: Snow on screen when using Soft-ICE with Windows 3.0 in
+  real mode.
+  Solution: Increase the Windows space by decreasing the /TRA and
+  /SYM space used by Soft-ICE.
+
+  -------------------------------------------------------------------
+  66. LOADING IN OVER 16M MEMORY OR 16M MEMORY NOMINAL
+  -------------------------------------------------------------------
+  Problem: Over 16M memory, keeps rebooting when trying to install
+  Solution: patch s-ice.exe as follows:
+	 ren s-ice.exe s-ice.bin
+	 debug s-ice.bin
+	 -s 0 lffff b4 88 cd 15
+	 (prints 2 addresses in xxxx:yyyy format)
+	 -e first-address b8 00 3b 90
+	 -w
+	 -q
+	 ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  67. COMPAQ REBOOTS WHEN TRYING TO LOAD SOFT-ICE
+  -------------------------------------------------------------------
+  Problem: SL based/non-BIMM Compaq system reboots when s-ice.exe is
+	   installed.
+  Solution: change s-ice.exe as follows (NOTE - the syntax "cs+2000"
+  means add 2000 hex to the contents of the CS register and key in
+  this number):
+	 ren  s-ice.exe s-ice.bin
+	 debug s-ice.bin
+	 -s 0 lffff '03C'
+	 (prints an address in xxxx:yyyy format)
+	 -e address ff
+	 -r        (get CS)
+	 -s cs+2000:0 lffff '03C'
+	 (prints an address in xxxx:yyyy format)
+	 -e address ff
+	 -w
+	 -q
+	 ren s-ice.bin s-ice.exe
+
+   Also, if the keyword COMPAQ is in the S-ICE.DAT file, comment it
+   out with a semicolon.
+
+   NOTE: This problem has also occurred on other brands of computer
+   which used a Compaq BIOS to control an IDE disk drive.
+
+  -------------------------------------------------------------------
+  68. USING SOFT-ICE ON A PENTIUM SYSTEM
+  -------------------------------------------------------------------
+   The following changes must be made when using Soft-ICE on a
+   Pentium system (NOTE - the syntax "cs+2000" means add 2000 Hex to
+   the contents of the CS register and key in this number):
+
+	 ren  s-ice.exe s-ice.bin
+	 debug s-ice.bin
+	 -r        (get CS)
+	 -s cs+2000:0 lffff 2e 83 06
+	 (prints an address in xxxx:yyyy format)
+	 -e address 64
+	 -s cs+2000:0 lffff 2e c7 06
+	 (prints two addresses in xxxx:yyyy format)
+	 -e first-address 64
+	 -w
+	 -q
+	 ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  69. LDR HANGS WHEN LOADING SYMBOLS
+  -------------------------------------------------------------------
+  Problem: LDR.EXE hangs when loading symbols or the symbolic
+  names are all junk characters.
+  Solution: LDR stores the symbolic names in 5K blocks for parsing
+  to extended memory. When a block is filled, there is no check for
+  the end of the symbols, so if the last name exactly fills the last
+  block, LDR continues processing and hangs. The following patch
+  inserts a check for the symbol count = 0 at the end of a block.
+
+  ren ldr.exe ldr.bin
+  debug ldr.bin
+  -s 0 lffff 0f 8f 05 00
+  (prints an address in xxxx:yyyy format)
+  -e xxxx:yyyy 77 05 e2 e8 eb 1b 90 49 e3 17
+  -w
+  -q
+  ren ldr.bin ldr.exe
+
+  -------------------------------------------------------------------
+  70. BAD PRINTOUT OF SOURCE LINES IN BACK TRACE
+  -------------------------------------------------------------------
+  Problem: Source lines sent to printer when printing back trace
+  buffer are blank or all 0F characters.
+  Solution: Source lines are routed through a routine which puts
+  the actual character in AH, and puts 0F into AL The printer routine
+  reads the contents of AL. To correct this, patch S-ICE.EXE to swap
+  AL and AH when AL = 0F, as follows:
+
+  NOTE: This patch begins at the address + 2, i.e., at the "ee"
+
+  ren s-ice.exe s-ice.bin
+  debug s-ice.bin
+  -s 0 lffff 3d 4a ee
+  (prints an address in xxxx:yyyy format)
+  -e xxxx:yyyy+2  3c 0f 75 02 88 e0 ee b9 05 00 e2 fe 42 bb a0 00
+  -e xxxx:yyyy+12 ec 51 b9 05 00 e2 fe 59 a8 80 75 07 e2 f2 4b 74
+  -e xxxx:yyyy+22 1b eb ed b0 0d 42 ee b9 05 00 e2 fe
+  -w
+  -q
+  ren s-ice.bin s-ice.exe
+
+  -------------------------------------------------------------------
+  71. BACK TRACE PRINTOUT HAS LONG BLOCKS OF SPACES
+  -------------------------------------------------------------------
+  Problem: While printing the back trace buffer, long blocks of
+  spaces are printed when a field overruns into the next field.
+  Solution: Patch S-ICE.EXE as follows to print a single space
+  if a negative or zero count results when calculating the number of
+  spaces to get to a specific column:
+
+  ren s-ice.exe s-ice.bin
+  debug s-ice.bin
+  -r              (get contents of CS register)
+  -s cs+1000:0 lffff d0 e4 d0 e4 d0 e4 d0 e4
+  (prints an address in xxxx:yyyy format)
+  -e xxxx:yyyy    c0 e4 04 0a c4 8a c8 b5 00 2a 0e e3 3f 7d 03 b9
+  -e xxxx:yyyy+10 01 00
+  -w
+  -q
+  ren s-ice.bin s-ice.exe
+
+

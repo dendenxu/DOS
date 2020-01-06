@@ -1,0 +1,44 @@
+UMB.DOC
+Using UMB.SYS to Activate DOS Upper Memory Blocks
+
+Microsoft with MS-DOS 5.0 and its associated HIMEM.SYS has defined a standard
+mechanism for loading T&SRs and	loadable drivers into the free memory
+address	space between 640K and 1 Megabyte.  These free memory areas
+are called UMBs	(Upper Memory Blocks).
+
+UMB.SYS	supports the standard UMB protocol as defined in the Microsoft
+XMS specification.  This is useful if you are debugging	a program that
+uses UMBs or if	you wish to use	other load high	utilities than the ones
+supplied by Nu-Mega Technologies, Inc.	(DOS 5 LH and DEVICEHIGH for example.)
+
+To activate these UMBs with a NU-MEGA driver (S-ICE.EXE, BC.SYS	or
+NU-MEGA.SYS) you must use an additional	driver named UMB.SYS. This
+driver has no parameters and must be placed after HIMEM.SYS in your
+CONFIG.SYS file.  The following	example	using Soft-ICE as the driver
+shows the order	that the EMM driver, HIMEM.SYS and UMB.SYS must	be placed
+in your	CONFIG.SYS:
+
+	DEVICE = S-ICE.EXE
+	DEVICE = HIMEM.SYS /M:1
+	DEVICE = UMB.SYS
+
+Notes:	1. The order is	critical.
+	2. The /M:1 parameter should be	used with DOS 5.
+
+Defining UMBs
+
+Before using UMB.SYS you must direct the Nu-Mega EMM driver to place memory 
+in the holes between 640K and 1	megabyte.  For S-ICE.EXE and NUMEGA.SYS	you 
+must first run EMMSETUP.EXE (use the syntax EMMSETUP S-ICE.EXE or EMMSETUP 
+NUMEGA.SYS to be sure the correct memory manager is changed). For BC.SYS 
+you must run BCSETUP.EXE.  In each case	you must choose	to have	high memory 
+support	and you	must make sure that there are one or more H's in the memory 
+page map.  See the manual for the specific product in question for details.
+
+Using UMB.SYS with DOS 5
+
+If you are using MS-DOS	5.X then UMB.SYS allows	you to load device
+drivers	and T&SRs high using the DOS built-in commands;	LH & DEVICEHIGH.
+You should put the command:
+	dos = high;umb
+as the first line in your CONFIG.SYS. See the DOS 5 documentation for details.

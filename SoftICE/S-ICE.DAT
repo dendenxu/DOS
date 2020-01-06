@@ -1,0 +1,13 @@
+F1 = "H;"
+F2 = "BPX;"
+F3 = "^SRC;"
+F4 = "^HERE;"
+F5 = "^RS;"
+F6 = "^EC;"
+F7 = "^T;"
+F8 = "^P;"
+F10 = "^P;"
+F11 = "^G @SS:SP;"
+F12 = "VER;"
+Init = "WIN;LINES 50;WC 20;WD 8;WR;SL;R32;COLORS 47 4E 4E 07 0F 70 17 1F 71 30 3F 71;CLS;X;"
+
